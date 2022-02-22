@@ -22,13 +22,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//route: GET
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+//route: ADD new url
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  //response.send("OK");
 
   const randomShort = generateRandomString();
   urlDatabase[randomShort] = req.body.longURL;
@@ -44,6 +45,15 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+// route: DELETE
+app.post("/urls/:shortURL/delete", (req, res) => {
+  console.log(req.params);
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+//route: GET new url page
 app.get("/urls/:shortURL", (request, response) => {
   const templateVars = {
     shortURL: request.params.shortURL, //get shortURL, it is obj key
