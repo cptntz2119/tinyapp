@@ -37,7 +37,7 @@ app.post("/urls", (req, res) => {
   const randomShort = generateRandomString();
   urlDatabase[randomShort] = req.body.longURL;
 
-  res.redirect(`/urls/${randomShort}`);
+  res.redirect(`/urls/`); //used tobe res.redirect(`/urls/${randomShort}`);
 });
 
 //route: introduce cookies so that user login and log out is added
