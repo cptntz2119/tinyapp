@@ -7,8 +7,21 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-      </div>
+        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>   
+      </div>    
     </div>
+    <% if (typeof username !== 'string') {%>
+    <form method="POST" action="/login">
+      <input  type="text" name="username" placeholder="username"  style="width: 300px; margin: 1em">
+      <button type="submit" >Log in</button>
+      </form>
+   <% } %>
+      <% if (typeof username === 'string') {%>
+      <form method="POST" action="/logout">
+        <label for="username">Logged In As: <%= username %>!</label>
+        
+        <button type="submit" >Log out</button>
+        </form>
+      <% } %>
   </nav>
 </header>
