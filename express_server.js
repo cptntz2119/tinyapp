@@ -38,30 +38,68 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//Route: get register page
+app.get("/register", (req, res) => {
+  let user_id = req.cookies["user_id"];
+  const templateVars = { user: users[user_id], urls: urlDatabase };
+  res.render("urls_register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  for (let user in users) {
+    //console.log(user);
+    //console.log(users[user].email, "monkey", req.body.email);
+    if (users[user].email === req.body.email) {
+      res.send("email exist");
+    }
+  }
+  const user_id = generateRandomString();
+  users[user_id] = {
+    id: user_id,
+    email: req.body.email,
+    password: req.body.password,
+  };
+  //console.log("users after register", users);
+  //check for empty email or password
+  if (!req.body.email || !req.body.password) {
+    res.send("empty email");
+    return res.redirect("/register");
+  }
+  //check for existence of email address
+
+  //console.log(users);
+  res.cookie("user_id", user_id);
+  return res.redirect("/urls");
+});
+
 app.get("/login", (req, res) => {
   const user_id = req.cookies["user_id"];
   const templateVars = { user: users[user_id] };
   res.render("urls_login", templateVars);
 });
 app.post("/login", (req, res) => {
-  for (let user in users) {
-    //console.log(user);
-    //console.log(users[user].email, "monkey", req.body.email);
-    if (users[user].email !== req.body.email) {
-      res.status(403).send("invalid email");
-      // res.send("user exist");
-      //return res.redirect("/register");
-    }
-    if (users[user].password !== req.body.word) {
-      res.status(403).send("invalid password");
-      // res.send("user exist");
-      //return res.redirect("/register");
-    }
+  // console.log(req.body, "monkey", users);
+  // console.log("monkey22222", users);
+  // console.log("monkey3333", user);
+  const user = getUserByEmail(users, req.body.email);
+  if (!user || user.password !== req.body.password) {
+    res.send("Invalind user info");
   }
 
-  res.cookie("user_id", user_id);
-  return res.redirect("/urls");
+  res.cookie("user_id", user.id);
+
+  res.redirect("/urls");
+  //check for empty email or password
 });
+
+const getUserByEmail = (database, email) => {
+  for (let data in database) {
+    if (email === database[data]["email"]) {
+      return database[data];
+    }
+    return undefined;
+  }
+};
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
@@ -133,42 +171,6 @@ app.get("/", (req, res) => {
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
 // });
-
-//Route: get register page
-app.get("/register", (req, res) => {
-  let user_id = req.cookies["user_id"];
-  const templateVars = { user: users[user_id], urls: urlDatabase };
-  res.render("urls_register", templateVars);
-});
-
-app.post("/register", (req, res) => {
-  for (let user in users) {
-    //console.log(user);
-    console.log(users[user].email, "monkey", req.body.email);
-    if (users[user].email === req.body.email) {
-      res.send("email exist");
-      // res.send("user exist");
-      //return res.redirect("/register");
-    }
-  }
-
-  const user_id = generateRandomString();
-  users[user_id] = {
-    id: user_id,
-    email: req.body.email,
-    password: req.body.password,
-  };
-  //check for empty email or password
-  if (!req.body.email || !req.body.password) {
-    res.send("empty email");
-    return res.redirect("/register");
-  }
-  //check for existence of email address
-
-  //console.log(users);
-  res.cookie("user_id", user_id);
-  return res.redirect("/urls");
-});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on prot ${PORT}`);
