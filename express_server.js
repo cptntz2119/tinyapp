@@ -18,15 +18,48 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+// const userDB = {
+//   //use user_id look up for user
+//   userRandomID: users["userRandomID"],
+//   user2RandomID: users["user2RandomID"],
+// };
+
 //use ejs to render new pages, when add login update template
 app.get("/urls", (req, res) => {
-  const templateVars = { username: req.cookies["username"], urls: urlDatabase };
+  let user_id = req.cookies["user_id"];
+  const templateVars = { user: users[user_id], urls: urlDatabase };
   res.render("urls_index", templateVars);
+});
+//route: introduce cookies so that user login and log out is added
+app.post("/login", (req, res) => {
+  //let username = req.cookies.username;
+  res.cookie("username", req.body.username);
+  console.log("cookie usename is: ", req.body.username);
+  res.redirect("/urls");
+});
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  //console.log("cookie usename is: ", req.body.username);
+  res.redirect("/urls");
 });
 
 //route: GET, update with user login by adding template
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let user_id = req.cookies["user_id"];
+  const templateVars = { user: users[user_id], urls: urlDatabase };
   res.render("urls_new", templateVars);
 });
 
@@ -38,19 +71,6 @@ app.post("/urls", (req, res) => {
   urlDatabase[randomShort] = req.body.longURL;
 
   res.redirect(`/urls/`); //used tobe res.redirect(`/urls/${randomShort}`);
-});
-
-//route: introduce cookies so that user login and log out is added
-app.post("/login", (req, res) => {
-  //let username = req.cookies.username;
-  res.cookie("username", req.body.username);
-  console.log("cookie usename is: ", req.body.username);
-  res.redirect("/urls");
-});
-app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  //console.log("cookie usename is: ", req.body.username);
-  res.redirect("/urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -78,12 +98,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 //route: GET new url page
-app.get("/urls/:shortURL", (request, response) => {
+app.get("/urls/:shortURL", (req, res) => {
+  let user_id = req.cookies["user_id"];
+
   const templateVars = {
-    shortURL: request.params.shortURL, //get shortURL, it is obj key
-    longURL: urlDatabase[request.params.shortURL],
+    shortURL: req.params.shortURL, //get shortURL, it is obj key
+    longURL: urlDatabase[req.params.shortURL],
+    user: users[user_id],
   };
-  response.render("urls_show", templateVars);
+  res.render("urls_show", templateVars);
 });
 
 app.get("/", (req, res) => {
@@ -98,14 +121,33 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-// check if fetch will get result of set, answer is no. from diffent page
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
+//Route: get register page
+app.get("/register", (req, res) => {
+  let user_id = req.cookies["user_id"];
+  const templateVars = { user: users[user_id], urls: urlDatabase };
+  res.render("urls_register", templateVars);
 });
 
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
+app.post("/register", (req, res) => {
+  const user_id = generateRandomString();
+  users[user_id] = {
+    id: user_id,
+    email: req.body.email,
+    password: req.body.password,
+  };
+  //check for empty email or password
+  if (!req.body.email || !req.body.password) {
+    return res.redirect("/register");
+  }
+  //check for existence of email address
+  for (let user in users) {
+    if (user.email === req.body.email) {
+      return res.redirect("/register");
+    }
+  }
+  console.log(users);
+  res.cookie("user_id", user_id);
+  return res.redirect("/urls");
 });
 
 app.listen(PORT, () => {

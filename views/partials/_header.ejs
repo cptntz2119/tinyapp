@@ -10,15 +10,15 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>   
       </div>    
     </div>
-    <% if (typeof username !== 'string') {%>
+    <% if (!user) {%>
     <form method="POST" action="/login">
-      <input  type="text" name="username" placeholder="username"  style="width: 300px; margin: 1em">
+      <input  type="text" name="user_email" placeholder="type email"  style="width: 300px; margin: 1em">
       <button type="submit" >Log in</button>
       </form>
    <% } %>
-      <% if (typeof username === 'string') {%>
+      <% if (user) {%>
       <form method="POST" action="/logout">
-        <label for="username">Logged In As: <%= username %>!</label>
+        <label for="users[user_id].email">Logged In As: <%= user["email"] %>!</label>
         
         <button type="submit" >Log out</button>
         </form>
