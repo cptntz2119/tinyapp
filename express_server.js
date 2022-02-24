@@ -31,25 +31,20 @@ const users = {
   },
 };
 
-// const userDB = {
-//   //use user_id look up for user
-//   userRandomID: users["userRandomID"],
-//   user2RandomID: users["user2RandomID"],
-// };
-
 //use ejs to render new pages, when add login update template
 app.get("/urls", (req, res) => {
   let user_id = req.cookies["user_id"];
   const templateVars = { user: users[user_id], urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
-//route: introduce cookies so that user login and log out is added
-app.post("/login", (req, res) => {
-  //let username = req.cookies.username;
-  res.cookie("username", req.body.username);
-  console.log("cookie usename is: ", req.body.username);
-  res.redirect("/urls");
+
+app.get("/login", (req, res) => {
+  let user_id = req.cookies["user_id"];
+  const templateVars = { user: users[user_id], urls: urlDatabase };
+  res.render("urls_login", templateVars);
 });
+
+
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   //console.log("cookie usename is: ", req.body.username);
