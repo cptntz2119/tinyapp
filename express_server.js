@@ -19,9 +19,19 @@ app.use(cookieParser());
 //   return Math.random().toString(36).replace("0.", "").substring(0, 6);
 // }
 
+// const urlDatabase = {
+//   b2xVn2: "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com",
+// };
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -36,8 +46,6 @@ const users = {
     password: "dishwasher-funk",
   },
 };
-
-
 
 //use ejs to render new pages, when add login update template
 app.get("/urls", (req, res) => {
@@ -119,17 +127,20 @@ app.get("/urls/new", (req, res) => {
 
 //route: ADD new url
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  //console.log(req.body); // Log the POST request body to the console
 
-  const randomShort = generateRandomString();
-  urlDatabase[randomShort] = req.body.longURL;
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id,
+  };
 
-  res.redirect(`/urls/`); //used tobe res.redirect(`/urls/${randomShort}`);
+  res.redirect(`/urls/${shortURL}`); //used tobe res.redirect(`/urls/${randomShort}`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-    res.redirect(urlDatabase[req.params.shortURL]);
+    res.redirect(urlDatabase[req.params.shortURL].longURL);
   } else {
     res.send("URL not found. Create a new one pls");
   }
@@ -139,7 +150,9 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   //console.log("route update", req.params);
   //console.log(req.body);
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  const shortURL = req.params.shortURL;
+  const longURL = req.body.longURL;
+  urlDatabase[shortURL].longURL = longURL;
   res.redirect("/urls/");
 });
 
@@ -154,12 +167,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //route: GET new url page
 app.get("/urls/:shortURL", (req, res) => {
   let user_id = req.cookies["user_id"];
-
+  const shortURL = req.params.shortURL;
+  console.log(req.params);
+  console.log(req.params.shortURL);
   const templateVars = {
     shortURL: req.params.shortURL, //get shortURL, it is obj key
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[shortURL].longURL,
     user: users[user_id],
   };
+  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
