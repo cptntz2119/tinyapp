@@ -2,6 +2,12 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
+//const userDatabase = require("./data/userData");
+const {
+  fetchUserInfo,
+  authenticateUser,
+  generateRandomString,
+} = require("./helpers/userHelpers");
 
 const PORT = 8080;
 
@@ -9,9 +15,9 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-function generateRandomString() {
-  return Math.random().toString(36).replace("0.", "").substring(0, 6);
-}
+// function generateRandomString() {
+//   return Math.random().toString(36).replace("0.", "").substring(0, 6);
+// }
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -31,6 +37,8 @@ const users = {
   },
 };
 
+
+
 //use ejs to render new pages, when add login update template
 app.get("/urls", (req, res) => {
   let user_id = req.cookies["user_id"];
@@ -46,30 +54,23 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  for (let user in users) {
-    //console.log(user);
-    //console.log(users[user].email, "monkey", req.body.email);
-    if (users[user].email === req.body.email) {
-      res.send("email exist");
-    }
-  }
-  const user_id = generateRandomString();
+  console.log(req.body);
+  const email = req.body["email"];
+  const password = req.body["password"];
+  user_id = generateRandomString();
   users[user_id] = {
     id: user_id,
-    email: req.body.email,
-    password: req.body.password,
+    email: email,
+    password: password,
   };
-  //console.log("users after register", users);
-  //check for empty email or password
-  if (!req.body.email || !req.body.password) {
-    res.send("empty email");
-    return res.redirect("/register");
+  if (!email || !password) {
+    res.send("one of the fields is invalid");
   }
-  //check for existence of email address
-
-  //console.log(users);
+  if (userDatabase[email]) {
+    res.send("account already exists");
+  }
   res.cookie("user_id", user_id);
-  return res.redirect("/urls");
+  return res.redirect("urls/");
 });
 
 app.get("/login", (req, res) => {
@@ -77,13 +78,15 @@ app.get("/login", (req, res) => {
   const templateVars = { user: users[user_id] };
   res.render("urls_login", templateVars);
 });
+
 app.post("/login", (req, res) => {
-  // console.log(req.body, "monkey", users);
-  // console.log("monkey22222", users);
-  // console.log("monkey3333", user);
-  const user = getUserByEmail(users, req.body.email);
-  if (!user || user.password !== req.body.password) {
-    res.send("Invalind user info");
+  //console.log(req.body);
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = authenticateUser(users, email);
+  //console.log(user);
+  if (!user || user.password !== password) {
+    res.send("Invalid email or password");
   }
 
   res.cookie("user_id", user.id);
@@ -92,14 +95,14 @@ app.post("/login", (req, res) => {
   //check for empty email or password
 });
 
-const getUserByEmail = (database, email) => {
-  for (let data in database) {
-    if (email === database[data]["email"]) {
-      return database[data];
-    }
-    return undefined;
-  }
-};
+// const getUserByEmail = (database, email) => {
+//   for (let data in database) {
+//     if (email === database[data]["email"]) {
+//       return database[data];
+//     }
+//     return undefined;
+//   }
+// };
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
