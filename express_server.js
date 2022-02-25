@@ -33,6 +33,7 @@ const urlDatabase = {
     userID: "aJ48lW",
   },
 };
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -71,7 +72,6 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  //console.log(req.body);
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -85,7 +85,6 @@ app.post("/register", (req, res) => {
 
   const id = generateRandomString();
   users[id] = { id, email, password: hashedPassword };
-  //console.log(users);
   req.session.user_id = id;
   res.redirect("/urls");
 });
@@ -101,8 +100,6 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = getUserByEmail(users, email);
-  //console.log("user :", user);
-  // console.log(!bcrypt.compareSync(password, user.password));
   if (!user || !bcrypt.compareSync(password, user.password)) {
     res.send("Invalid email or password");
   }
@@ -111,7 +108,6 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  //res.clearCookie("user_id");
   req.session = null;
   res.redirect("/urls");
 });
@@ -120,7 +116,6 @@ app.post("/logout", (req, res) => {
 app.get("/urls/new", (req, res) => {
   let user_id = req.session.user_id;
   if (!user_id) {
-    //res.send("Please log in or register");
     res.redirect("/login");
   }
   const templateVars = { user: users[user_id], urls: urlDatabase };
@@ -146,7 +141,6 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //Route: DELETE
 app.post("/urls/:shortURL/delete", (req, res) => {
-  //console.log(req.params);
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
@@ -157,14 +151,11 @@ app.get("/urls/:shortURL", (req, res) => {
   let user_id = req.session.user_id;
   if (user_id) {
     const shortURL = req.params.shortURL;
-    // console.log(req.params);
-    // console.log(req.params.shortURL);
     const templateVars = {
-      shortURL: req.params.shortURL, //get shortURL, it is obj key
+      shortURL: req.params.shortURL,
       longURL: urlDatabase[shortURL].longURL,
       user: users[user_id],
     };
-    //console.log(templateVars);
     res.render("urls_show", templateVars);
   } else {
     res.redirect("/login");
@@ -184,5 +175,5 @@ app.get("/hello", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on prot ${PORT}`);
+  console.log(`Listening on prot ${PORT}`);
 });
