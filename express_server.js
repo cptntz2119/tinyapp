@@ -39,7 +39,7 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "1234",
   },
   user2RandomID: {
     id: "user2RandomID",
@@ -78,18 +78,19 @@ app.post("/register", (req, res) => {
   const email = req.body["email"];
   const password = req.body["password"];
   const hashedPassword = bcrypt.hashSync(password, 10);
+
+  if (!email || !password) {
+    res.send("one of the fields is invalid");
+  }
+  if (authenticateUser(users, email)) {
+    res.send("account already exists");
+  }
   user_id = generateRandomString();
   users[user_id] = {
     id: user_id,
     email: email,
     password: hashedPassword,
   };
-  if (!email || !password) {
-    res.send("one of the fields is invalid");
-  }
-  if (urlDatabase[email]) {
-    res.send("account already exists");
-  }
   res.cookie("user_id", user_id);
   return res.redirect("urls/");
 });
@@ -103,18 +104,18 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  //const hashedPassword = bcrypt.hashSync(password, 10);
   const user = authenticateUser(users, email);
   // console.log("hashed user input", hashedPassword);
   // console.log("user input:", password);
-  // console.log("user pass in database:", user.password);
-  if (!user || !bcrypt.compareSync(user.password, hashedPassword)) {
+  // console.log("user password in database:", user.password);
+  // console.log(!bcrypt.compareSync(password, user.password));
+  if (!user || !bcrypt.compareSync(password, user.password)) {
     res.send("Invalid email or password");
   }
 
-  res.cookie("user_id", user.id);
+  res.cookie("user_id", user.id).redirect("/urls");
 
-  res.redirect("/urls");
   //check for empty email or password
 });
 
