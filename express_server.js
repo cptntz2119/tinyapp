@@ -47,10 +47,21 @@ const users = {
   },
 };
 
+const urlsForUser = (id) => {
+  const userURLs = {};
+  for (obj in urlDatabase) {
+    if (urlDatabase[obj].userID === id) {
+      userURLs[obj] = urlDatabase[obj];
+    }
+  }
+  return userURLs;
+};
+
 //use ejs to render new pages, when add login update template
 app.get("/urls", (req, res) => {
   let user_id = req.cookies["user_id"];
-  const templateVars = { user: users[user_id], urls: urlDatabase };
+  const userURLs = urlsForUser(user_id);
+  const templateVars = { user: users[user_id], urls: userURLs };
   res.render("urls_index", templateVars);
 });
 
@@ -121,6 +132,10 @@ app.post("/logout", (req, res) => {
 //route: GET, update with user login by adding template
 app.get("/urls/new", (req, res) => {
   let user_id = req.cookies["user_id"];
+  if (!user_id) {
+    //res.send("Please log in or register");
+    res.redirect("/login");
+  }
   const templateVars = { user: users[user_id], urls: urlDatabase };
   res.render("urls_new", templateVars);
 });
@@ -167,16 +182,21 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //route: GET new url page
 app.get("/urls/:shortURL", (req, res) => {
   let user_id = req.cookies["user_id"];
-  const shortURL = req.params.shortURL;
-  console.log(req.params);
-  console.log(req.params.shortURL);
-  const templateVars = {
-    shortURL: req.params.shortURL, //get shortURL, it is obj key
-    longURL: urlDatabase[shortURL].longURL,
-    user: users[user_id],
-  };
-  console.log(templateVars);
-  res.render("urls_show", templateVars);
+  //const userURLs = urlsForUser(user_id);
+  if (user_id) {
+    const shortURL = req.params.shortURL;
+    console.log(req.params);
+    console.log(req.params.shortURL);
+    const templateVars = {
+      shortURL: req.params.shortURL, //get shortURL, it is obj key
+      longURL: urlDatabase[shortURL].longURL,
+      user: users[user_id],
+    };
+    console.log(templateVars);
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/", (req, res) => {

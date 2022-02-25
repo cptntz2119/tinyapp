@@ -25,9 +25,11 @@ const authenticateUser = (users, email) => {
   return undefined;
 };
 
-function generateRandomString() {
+const  generateRandomString=() =>{
   return Math.random().toString(36).replace("0.", "").substring(0, 6);
 }
+
+
 
 module.exports = {
   fetchUserInfo,
