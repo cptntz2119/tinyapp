@@ -56,12 +56,16 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id,
-  };
-  res.redirect(`/urls/${shortURL}`);
+  if (req.session.user_id) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id,
+    };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.send("You must be logged in");
+  }
 });
 
 //Route: get register page
@@ -133,10 +137,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Route: UPDATE
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = req.body.longURL;
-  urlDatabase[shortURL].longURL = longURL;
-  res.redirect("/urls/");
+  const user_id = req.session.user_id;
+  if (user_id) {
+    const shortURL = req.params.shortURL;
+    const longURL = req.body.longURL;
+    urlDatabase[shortURL].longURL = longURL;
+    res.redirect("/urls/");
+  } else {
+    res.send("You do not have authorization to edit this short URL.");
+  }
 });
 
 //Route: DELETE
@@ -149,21 +158,26 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //Route: GET page for logged in user
 app.get("/urls/:shortURL", (req, res) => {
   let user_id = req.session.user_id;
-  if (user_id) {
-    const shortURL = req.params.shortURL;
-    const templateVars = {
+  const shortURL = req.params.shortURL;
+  //check if different users can access other uses' urls
+  if (user_id !== urlDatabase[shortURL].userID) {
+    res.status(401).send("Invalid access");
+  }
+  if (urlDatabase[req.params.shortURL]) {
+    let templateVars = {
       shortURL: req.params.shortURL,
-      longURL: urlDatabase[shortURL].longURL,
-      user: users[user_id],
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      urlUserID: urlDatabase[req.params.shortURL].userID,
+      user: users[req.session.user_id],
     };
     res.render("urls_show", templateVars);
   } else {
-    res.redirect("/login");
+    res.send("Invalid shortURL");
   }
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
